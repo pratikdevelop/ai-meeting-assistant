@@ -1,0 +1,95 @@
+<div class="flex h-full flex-col">
+
+  <div class="border-b border-white/10 px-6 py-4">
+    <div class="flex items-center justify-between">
+
+      <div>
+        <h2 class="text-lg font-semibold">
+          Live Transcript
+        </h2>
+
+        <p class="text-sm text-slate-400">
+          Real-time conversation
+        </p>
+      </div>
+
+      <button
+        type="button"
+        (click)="pipecat.clearMessages()"
+        class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition hover:bg-white/10"
+      >
+        Clear
+      </button>
+
+    </div>
+  </div>
+
+
+  <div class="flex-1 space-y-4 overflow-y-auto p-6">
+
+    @if (pipecat.messages().length === 0) {
+
+      <div
+        class="flex min-h-[400px] items-center justify-center"
+      >
+
+        <div class="text-center">
+
+          <div class="text-4xl">
+            🎙️
+          </div>
+
+          <p class="mt-3 text-sm text-slate-400">
+            Your conversation will appear here.
+          </p>
+
+        </div>
+
+      </div>
+
+    } @else {
+
+      @for (
+        message of pipecat.messages();
+        track message.id
+      ) {
+
+        <div
+          class="flex"
+          [class.justify-end]="message.role === 'user'"
+          [class.justify-start]="message.role === 'assistant'"
+        >
+
+          <div
+            class="max-w-[80%] rounded-2xl px-4 py-3"
+            [class.bg-violet-600]="message.role === 'user'"
+            [class.bg-white/5]="message.role === 'assistant'"
+            [class.border]="message.role === 'assistant'"
+            [class.border-white/10]="message.role === 'assistant'"
+          >
+
+            <div class="mb-1 text-xs font-medium text-slate-400">
+
+              @if (message.role === 'user') {
+                You
+              } @else {
+                AI Assistant
+              }
+
+            </div>
+
+            <p class="whitespace-pre-wrap text-sm leading-6">
+              {{ message.text }}
+            </p>
+
+          </div>
+
+        </div>
+
+      }
+
+    }
+
+  </div>
+
+</div>

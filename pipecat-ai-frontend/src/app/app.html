@@ -1,0 +1,65 @@
+<div class="min-h-screen bg-slate-950 text-white">
+  <div class="flex min-h-screen">
+
+    <aside class="hidden w-64 border-r border-white/10 bg-slate-900 lg:block">
+      <div class="p-5">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600">
+            🤖
+          </div>
+
+          <div>
+            <p class="font-semibold">
+              AI Meeting
+            </p>
+
+            <p class="text-xs text-slate-400">
+              Assistant
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="space-y-1 px-3">
+
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="bg-white/10 text-white"
+          class="block rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white"
+        >
+          📊 Dashboard
+        </a>
+
+        <a
+          routerLink="/voice"
+          routerLinkActive="bg-white/10 text-white"
+          class="block rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white"
+        >
+          🎤 Voice Assistant
+        </a>
+
+        <a
+          routerLink="/meetings"
+          routerLinkActive="bg-white/10 text-white"
+          class="block rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white"
+        >
+          📅 Meetings
+        </a>
+
+        <a
+          routerLink="/settings"
+          routerLinkActive="bg-white/10 text-white"
+          class="block rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white"
+        >
+          ⚙ Settings
+        </a>
+
+      </nav>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <router-outlet />
+    </main>
+
+  </div>
+</div>

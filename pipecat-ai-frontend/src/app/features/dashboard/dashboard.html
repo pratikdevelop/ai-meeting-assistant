@@ -1,0 +1,107 @@
+<div class="mx-auto max-w-7xl p-6">
+
+  <div class="mb-8">
+    <p class="text-sm text-violet-400">
+      AI MEETING ASSISTANT
+    </p>
+
+    <h1 class="mt-2 text-3xl font-bold">
+      Welcome back
+    </h1>
+
+    <p class="mt-2 text-slate-400">
+      Start a voice conversation or manage your meetings.
+    </p>
+  </div>
+
+
+  <div class="grid gap-6 md:grid-cols-3">
+
+    <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+      <p class="text-sm text-slate-400">
+        Voice Assistant
+      </p>
+
+      <p class="mt-3 text-3xl font-bold">
+        Ready
+      </p>
+
+      <a
+        routerLink="/voice"
+        class="mt-6 inline-block rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold hover:bg-violet-500"
+      >
+        Start Voice
+      </a>
+    </div>
+
+
+    <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+      <p class="text-sm text-slate-400">
+        Meetings
+      </p>
+
+      <p class="mt-3 text-3xl font-bold">
+        0
+      </p>
+
+      <a
+        routerLink="/meetings"
+        class="mt-6 inline-block rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/10"
+      >
+        View Meetings
+      </a>
+    </div>
+
+
+    <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+      <p class="text-sm text-slate-400">
+        Connection
+      </p>
+
+      <p class="mt-3 text-3xl font-bold">
+        {{ pipecat.connectionState() }}
+      </p>
+
+      <div class="mt-4 flex items-center gap-2 text-sm text-slate-400">
+
+        <span
+          class="h-2 w-2 rounded-full"
+          [class.bg-emerald-400]="
+            pipecat.connectionState() === 'connected' ||
+            pipecat.connectionState() === 'ready'
+          "
+          [class.bg-slate-500]="
+            pipecat.connectionState() === 'disconnected'
+          "
+        ></span>
+
+        Pipecat
+
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="mt-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+
+    <h2 class="text-xl font-semibold">
+      Your AI workspace
+    </h2>
+
+    <p class="mt-2 max-w-2xl text-slate-400">
+      Use the voice assistant for conversations now.
+      Meeting transcription, summaries, action items,
+      and meeting history will be added next.
+    </p>
+
+    <a
+      routerLink="/voice"
+      class="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold hover:bg-violet-500"
+    >
+      Open Voice Assistant
+    </a>
+
+  </div>
+
+</div>
