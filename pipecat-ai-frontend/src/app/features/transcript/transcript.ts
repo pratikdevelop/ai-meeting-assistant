@@ -10,4 +10,8 @@ import { Pipecat } from '../../core/pipecat';
 export class Transcript {
 
   readonly pipecat = inject(Pipecat);
+   isConnected(): boolean {
+    const state = this.pipecat.connectionState();
+    return state === 'connected' || state === 'ready';
+  }
 }

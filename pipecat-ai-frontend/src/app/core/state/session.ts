@@ -1,64 +1,84 @@
 import {
   Service,
-  computed,
+  inject,
   signal,
 } from '@angular/core';
 
-
-export interface MeetingSession {
-  id: string;
-  title: string;
-  startedAt: Date;
-}
-
+import {
+  Api,
+  Meeting,
+} from '../api/api';
 
 @Service()
 export class Session {
+  private readonly api = inject(Api);
 
   readonly currentMeeting =
-    signal<MeetingSession | null>(null);
+    signal<Meeting | null>(null);
 
   readonly meetings =
-    signal<MeetingSession[]>([]);
+    signal<Meeting[]>([]);
 
   readonly isMeetingActive =
-    computed(
-      () => this.currentMeeting() !== null,
-    );
+    signal(false);
 
-
-  startMeeting(
-    title = 'New Meeting',
-  ): void {
-
-    const meeting: MeetingSession = {
-      id: crypto.randomUUID(),
-      title,
-      startedAt: new Date(),
-    };
+  async startMeeting(
+    title = 'AI Voice Meeting',
+  ): Promise<Meeting> {
+    const meeting =
+      await this.api.createMeeting(title);
 
     this.currentMeeting.set(meeting);
+    this.isMeetingActive.set(true);
+
+    return meeting;
+  }
+
+  async endMeeting(): Promise<void> {
+    const meeting =
+      this.currentMeeting();
+
+    if (!meeting) {
+      return;
+    }
+
+    const completed =
+      await this.api.endMeeting(meeting.id);
+
+    this.currentMeeting.set(null);
+    this.isMeetingActive.set(false);
 
     this.meetings.update(
       (meetings) => [
-        meeting,
+        completed,
         ...meetings,
       ],
     );
   }
 
-
-  endMeeting(): void {
+  clearSession(): void {
     this.currentMeeting.set(null);
+    this.isMeetingActive.set(false);
   }
 
 
-  getMeeting(
-    id: string,
-  ): MeetingSession | undefined {
+  async saveTranscript(
+  messages: Array<{
+    role: 'user' | 'assistant';
+    text: string;
+  }>,
+): Promise<void> {
 
-    return this.meetings().find(
-      (meeting) => meeting.id === id,
-    );
+  const meeting =
+    this.currentMeeting();
+
+  if (!meeting) {
+    return;
   }
+
+  await this.api.saveTranscript(
+    meeting.id,
+    messages,
+  );
+}
 }

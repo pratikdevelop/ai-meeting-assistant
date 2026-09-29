@@ -1,13 +1,18 @@
-<div class="flex h-full flex-col">
+<!-- Fixed transcript component - only messages area scrolls -->
+<div class="flex h-full min-h-0 flex-col">
 
-  <div class="border-b border-white/10 px-6 py-4">
+  <!-- Header - fixed, never scrolls -->
+  <div class="shrink-0 border-b border-white/10 px-6 py-4 bg-slate-900/30 backdrop-blur-sm">
     <div class="flex items-center justify-between">
 
       <div>
-        <h2 class="text-lg font-semibold">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
           Live Transcript
+          <span class="inline-block h-1.5 w-1.5 rounded-full"
+                [class.bg-emerald-400]="isConnected()"
+                [class.bg-slate-500]="!isConnected()"
+                [class.animate-pulse]="isConnected()"></span>
         </h2>
-
         <p class="text-sm text-slate-400">
           Real-time conversation
         </p>
@@ -16,31 +21,33 @@
       <button
         type="button"
         (click)="pipecat.clearMessages()"
-        class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition hover:bg-white/10"
+        class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
       >
+        <i class="fas fa-eraser mr-1.5 text-xs"></i>
         Clear
       </button>
 
     </div>
   </div>
 
-
-  <div class="flex-1 space-y-4 overflow-y-auto p-6">
+  <!-- ONLY THIS AREA SCROLLS - takes remaining height -->
+  <div class="flex-1 min-h-0 overflow-y-auto p-6 bg-gradient-to-b from-slate-900/20 to-slate-950/20">
 
     @if (pipecat.messages().length === 0) {
 
-      <div
-        class="flex min-h-[400px] items-center justify-center"
-      >
+      <div class="flex min-h-full items-center justify-center">
 
         <div class="text-center">
 
-          <div class="text-4xl">
+          <div class="text-5xl">
             🎙️
           </div>
 
           <p class="mt-3 text-sm text-slate-400">
             Your conversation will appear here.
+          </p>
+          <p class="text-xs text-slate-500 mt-1">
+            Start speaking to begin the conversation
           </p>
 
         </div>
@@ -49,44 +56,46 @@
 
     } @else {
 
-      @for (
-        message of pipecat.messages();
-        track message.id
-      ) {
+      <div class="space-y-4">
 
-        <div
-          class="flex"
-          [class.justify-end]="message.role === 'user'"
-          [class.justify-start]="message.role === 'assistant'"
-        >
+        @for (message of pipecat.messages(); track message.id) {
 
-          <div
-            class="max-w-[80%] rounded-2xl px-4 py-3"
-            [class.bg-violet-600]="message.role === 'user'"
-            [class.bg-white/5]="message.role === 'assistant'"
-            [class.border]="message.role === 'assistant'"
-            [class.border-white/10]="message.role === 'assistant'"
-          >
+          <div class="flex"
+               [class.justify-end]="message.role === 'user'"
+               [class.justify-start]="message.role === 'assistant'">
 
-            <div class="mb-1 text-xs font-medium text-slate-400">
+            <div class="max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm"
+                 [class.bg-gradient-to-r]="message.role === 'user'"
+                 [class.from-violet-600]="message.role === 'user'"
+                 [class.to-indigo-600]="message.role === 'user'"
+                 [class.text-white]="message.role === 'user'"
+                 [class.bg-white/5]="message.role === 'assistant'"
+                 [class.border]="message.role === 'assistant'"
+                 [class.border-white/10]="message.role === 'assistant'">
 
-              @if (message.role === 'user') {
-                You
-              } @else {
-                AI Assistant
-              }
+              <div class="mb-1 text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5"
+                   [class.text-violet-200]="message.role === 'user'"
+                   [class.text-slate-400]="message.role === 'assistant'">
+                @if (message.role === 'user') {
+                  <i class="fas fa-user text-[10px]"></i>
+                  You
+                } @else {
+                  <i class="fas fa-robot text-[10px]"></i>
+                  AI Assistant
+                }
+              </div>
+
+              <p class="whitespace-pre-wrap break-words text-sm leading-7">
+                {{ message.text }}
+              </p>
 
             </div>
 
-            <p class="whitespace-pre-wrap text-sm leading-6">
-              {{ message.text }}
-            </p>
-
           </div>
 
-        </div>
+        }
 
-      }
+      </div>
 
     }
 

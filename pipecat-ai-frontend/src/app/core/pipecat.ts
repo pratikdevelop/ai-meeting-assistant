@@ -162,20 +162,24 @@ export class Pipecat {
         // Bot Output
         // --------------------------------------
 
-        onBotOutput: (data) => {
-          console.log(
-            '🤖 Bot output:',
-            data.text,
-          );
+onBotOutput: (data) => {
+  console.log('🤖 Bot output:', data);
 
-          if (!data.text?.trim()) {
-            return;
-          }
+  if (!data.text?.trim()) {
+    return;
+  }
 
-          this.addAssistantMessage(
-            data.text,
-          );
-        },
+  // Pipecat can emit both sentence-level and word-level
+  // botOutput events. We only want sentence-level events
+  // for the conversation transcript.
+  if (data.aggregated_by !== 'sentence') {
+    return;
+  }
+
+  this.addAssistantMessage(
+    data.text,
+  );
+},
 
 
         // --------------------------------------
@@ -428,51 +432,27 @@ export class Pipecat {
   }
 
 
-  private addAssistantMessage(
-    text: string,
-  ): void {
+private addAssistantMessage(
+  text: string,
+): void {
 
-    const cleanedText = text.trim();
+  const cleanedText = text.trim();
 
-    if (!cleanedText) {
-      return;
-    }
-
-    this.messages.update(
-      (messages) => {
-
-        const last = messages.at(-1);
-
-        // Bot output can arrive in multiple logical chunks.
-        // Append to an active assistant message.
-        if (
-          last?.role === 'assistant'
-        ) {
-
-          const updated = [
-            ...messages,
-          ];
-
-          updated[updated.length - 1] = {
-            ...last,
-            text: `${last.text}${cleanedText}`,
-            timestamp: new Date(),
-          };
-
-          return updated;
-        }
-
-        return [
-          ...messages,
-          {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            text: cleanedText,
-            final: true,
-            timestamp: new Date(),
-          },
-        ];
-      },
-    );
+  if (!cleanedText) {
+    return;
   }
+
+  this.messages.update(
+    (messages) => [
+      ...messages,
+      {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: cleanedText,
+        final: true,
+        timestamp: new Date(),
+      },
+    ],
+  );
+}
 }

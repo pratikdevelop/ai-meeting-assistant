@@ -1,5 +1,329 @@
-<section
-  class="min-h-[620px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]"
->
-  <app-transcript />
-</section>
+<!-- 
+  voice.html – Complete AI Voice Assistant UI
+  Fixed layout with proper height constraints and scrollable transcript
+-->
+<div class="h-screen overflow-hidden bg-slate-950 text-white font-sans antialiased">
+
+  <!-- ========== HEADER ========== -->
+  <header class="h-[88px] shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-sm flex items-center px-6 lg:px-8 transition-all">
+    <div class="flex h-full w-full items-center justify-between">
+
+      <!-- left: brand -->
+      <div class="flex flex-col gap-0.5">
+        <div class="flex items-center gap-2">
+          <span class="inline-block h-2 w-2 rounded-full bg-violet-400 animate-pulse"></span>
+          <p class="text-xs font-semibold tracking-[0.2em] text-violet-300 uppercase">AI Meeting Assistant</p>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          Voice Assistant
+          <span class="text-sm font-normal text-slate-400 font-mono tracking-wider ml-1 hidden sm:inline-block">• live</span>
+        </h1>
+        <p class="text-sm text-slate-400 flex items-center gap-1.5">
+          <i class="fas fa-wave-square text-violet-400/70 text-xs"></i>
+          Real‑time AI voice conversation
+        </p>
+      </div>
+
+      <!-- right: status badge -->
+      <div class="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 backdrop-blur-sm shadow-md shadow-violet-950/10 transition-all hover:bg-white/10">
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full" 
+                [class.bg-emerald-400]="isConnected()"
+                [class.bg-amber-400]="pipecat.connectionState() === 'connecting'"
+                [class.bg-red-400]="pipecat.connectionState() === 'error'"
+                [class.bg-slate-500]="pipecat.connectionState() === 'disconnected'"
+                [class.opacity-60]="true"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3"
+                [class.bg-emerald-400]="isConnected()"
+                [class.bg-amber-400]="pipecat.connectionState() === 'connecting'"
+                [class.bg-red-400]="pipecat.connectionState() === 'error'"
+                [class.bg-slate-500]="pipecat.connectionState() === 'disconnected'"></span>
+        </span>
+        <span class="text-sm font-medium text-slate-200 tracking-wide">{{ statusLabel() }}</span>
+        <span class="w-px h-5 bg-white/10 mx-1"></span>
+        <span class="text-xs text-slate-400 font-mono flex items-center gap-1">
+          <i class="fas fa-microphone text-emerald-400/70 text-[10px]" 
+             [class.text-amber-400/70]="!pipecat.isMicEnabled()"></i>
+          {{ pipecat.isMicEnabled() ? 'active' : 'muted' }}
+        </span>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========== MAIN CONTENT - FIXED HEIGHT ========== -->
+  <main class="grid h-[calc(100vh-88px)] min-h-0 overflow-hidden lg:grid-cols-[380px_1fr]">
+
+    <!-- ===== ASSISTANT PANEL (left) ===== -->
+    <section class="flex min-h-0 flex-col bg-slate-900/40 backdrop-blur-sm border-r border-white/5 p-6 lg:p-8 relative overflow-y-auto">
+
+      <!-- subtle gradient overlay -->
+      <div class="absolute inset-0 bg-gradient-to-b from-violet-950/5 to-transparent pointer-events-none"></div>
+
+      <div class="flex min-h-0 flex-1 flex-col items-center justify-center relative z-10">
+
+        <!-- Avatar + rings (dynamic) -->
+        <div class="relative group">
+
+          <!-- main avatar circle -->
+          <div class="flex h-44 w-44 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-indigo-500 to-cyan-400 p-1.5 shadow-2xl shadow-violet-950/40 ring-glow transition-transform duration-300 hover:scale-[1.02]"
+               [class.animate-pulse]="pipecat.isListening() || pipecat.isSpeaking()">
+            <div class="flex h-full w-full items-center justify-center rounded-full bg-slate-950 text-7xl drop-shadow-md">
+              🤖
+            </div>
+          </div>
+
+          <!-- listening ring (cyan ping) -->
+          @if (pipecat.isListening()) {
+            <div class="absolute -inset-3 rounded-full border-2 border-cyan-400/30 animate-ping opacity-70"></div>
+          }
+
+          <!-- speaking ring (violet pulse) -->
+          @if (pipecat.isSpeaking()) {
+            <div class="absolute -inset-5 rounded-full border border-violet-400/30 animate-pulse-slow"></div>
+          }
+
+          <!-- small decorative dot -->
+          <div class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-slate-950 shadow-lg"
+               [class.bg-emerald-400/80]="isConnected()"
+               [class.bg-amber-400/80]="pipecat.connectionState() === 'connecting'"
+               [class.bg-red-400/80]="pipecat.connectionState() === 'error'"
+               [class.bg-slate-500/80]="!isConnected() && pipecat.connectionState() !== 'connecting'"></div>
+        </div>
+
+        <!-- State messaging (dynamic) -->
+        <div class="mt-8 text-center space-y-1.5">
+          <div class="flex items-center justify-center gap-2">
+            <span class="inline-block h-2.5 w-2.5 rounded-full"
+                  [class.bg-emerald-400]="isConnected() && !pipecat.isListening() && !pipecat.isSpeaking()"
+                  [class.bg-cyan-400]="pipecat.isListening()"
+                  [class.bg-violet-400]="pipecat.isSpeaking()"
+                  [class.bg-amber-400]="pipecat.connectionState() === 'connecting'"
+                  [class.bg-red-400]="pipecat.connectionState() === 'error'"
+                  [class.bg-slate-500]="!isConnected() && pipecat.connectionState() !== 'connecting' && pipecat.connectionState() !== 'error'"
+                  [class.animate-pulse]="pipecat.isListening() || pipecat.isSpeaking()"></span>
+            <h2 class="text-xl font-semibold text-white tracking-tight">
+              @if (pipecat.isListening()) {
+                Listening...
+              } @else if (pipecat.isSpeaking()) {
+                Speaking...
+              } @else if (isConnected()) {
+                Ready
+              } @else if (pipecat.connectionState() === 'connecting') {
+                Connecting...
+              } @else if (pipecat.connectionState() === 'error') {
+                Connection Error
+              } @else {
+                Ready to talk
+              }
+            </h2>
+          </div>
+          <p class="text-sm text-slate-400 max-w-[220px] mx-auto leading-relaxed">
+            <i class="fas fa-chevron-right text-violet-400/60 text-[10px] mr-1"></i>
+            @if (pipecat.isListening()) {
+              I'm listening to you
+            } @else if (pipecat.isSpeaking()) {
+              AI is responding
+            } @else if (isConnected()) {
+              You can start speaking
+            } @else if (pipecat.connectionState() === 'connecting') {
+              Establishing connection...
+            } @else if (pipecat.connectionState() === 'error') {
+              Something went wrong
+            } @else {
+              Start a voice conversation
+            }
+          </p>
+          <div class="flex items-center justify-center gap-2 text-xs text-slate-500 mt-1">
+            <span class="flex items-center gap-1"><i class="fas fa-circle text-[6px] text-emerald-400/60"></i> listening</span>
+            <span class="w-px h-3 bg-white/10"></span>
+            <span class="flex items-center gap-1"><i class="fas fa-circle text-[6px] text-violet-400/60"></i> speaking</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== CONTROLS ===== -->
+      <div class="shrink-0 space-y-3.5 mt-4 z-10">
+
+        <!-- primary action: start / connecting -->
+        @if (!isConnected() && pipecat.connectionState() !== 'connecting') {
+          <button
+            type="button"
+            (click)="startConversation()"
+            [disabled]="pipecat.connectionState() === 'connecting'"
+            class="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 font-semibold text-white shadow-lg shadow-violet-950/40 transition-all duration-200 hover:shadow-violet-700/30 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            <i class="fas fa-play text-sm"></i>
+            <span>Start Conversation</span>
+          </button>
+        } @else if (pipecat.connectionState() === 'connecting') {
+          <button
+            type="button"
+            disabled
+            class="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 font-semibold text-white shadow-lg shadow-violet-950/40 flex items-center justify-center gap-2 opacity-70 cursor-not-allowed"
+          >
+            <i class="fas fa-spinner fa-spin text-sm"></i>
+            <span>Connecting...</span>
+          </button>
+        } @else {
+          <!-- when connected: mute + clear + end -->
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              (click)="toggleMicrophone()"
+              class="rounded-2xl border border-white/10 bg-white/5 px-3 py-3.5 font-medium text-slate-200 transition hover:bg-white/10 flex items-center justify-center gap-1.5 col-span-1"
+              [class.border-emerald-400/30]="pipecat.isMicEnabled()"
+            >
+              @if (pipecat.isMicEnabled()) {
+                <i class="fas fa-microphone text-sm text-emerald-400/70"></i>
+                <span class="text-xs hidden sm:inline">Mute</span>
+              } @else {
+                <i class="fas fa-microphone-slash text-sm text-amber-400/70"></i>
+                <span class="text-xs hidden sm:inline">Unmute</span>
+              }
+            </button>
+
+            <button
+              type="button"
+              (click)="clearConversation()"
+              class="rounded-2xl border border-white/10 bg-white/5 px-3 py-3.5 font-medium text-slate-200 transition hover:bg-white/10 flex items-center justify-center gap-1.5 col-span-1"
+            >
+              <i class="fas fa-eraser text-sm text-slate-400"></i>
+              <span class="text-xs hidden sm:inline">Clear</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="endConversation()"
+              class="rounded-2xl bg-red-500/90 px-3 py-3.5 font-medium text-white transition hover:bg-red-400 flex items-center justify-center gap-1.5 shadow-red-900/20 col-span-1"
+            >
+              <i class="fas fa-stop text-sm"></i>
+              <span class="text-xs hidden sm:inline">End</span>
+            </button>
+          </div>
+        }
+
+        <!-- small note -->
+        <p class="text-[10px] text-slate-500 text-center tracking-wider uppercase mt-2 flex items-center justify-center gap-1.5">
+          <i class="fas fa-lock text-[8px]"></i>
+          <span>end‑to‑end encrypted</span>
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ===== TRANSCRIPT PANEL (right) - FIXED ===== -->
+    <section class="min-h-0 min-w-0 overflow-hidden flex flex-col bg-slate-900/20">
+
+      <!-- transcript header -->
+      <div class="shrink-0 flex items-center justify-between px-6 py-3.5 border-b border-white/5 bg-slate-900/30 backdrop-blur-sm">
+        <div class="flex items-center gap-2.5">
+          <i class="fas fa-comment-dots text-violet-400/70 text-sm"></i>
+          <span class="text-sm font-medium text-slate-300 tracking-wide">Live Transcript</span>
+          <span class="inline-block h-1.5 w-1.5 rounded-full"
+                [class.bg-emerald-400]="isConnected()"
+                [class.bg-slate-500]="!isConnected()"
+                [class.animate-pulse]="isConnected()"></span>
+        </div>
+        <span class="text-xs text-slate-500 font-mono">{{ currentTime() }}</span>
+      </div>
+
+      <!-- transcript body – ONLY THIS AREA SCROLLS -->
+      <div class="flex-1 min-h-0 overflow-y-auto p-6 bg-gradient-to-b from-slate-900/20 to-slate-950/20">
+
+        @if (pipecat.messages().length === 0) {
+
+          <div class="flex min-h-full items-center justify-center">
+
+            <div class="text-center">
+
+              <div class="text-5xl">
+                🎙️
+              </div>
+
+              <p class="mt-3 text-sm text-slate-400">
+                Your conversation will appear here.
+              </p>
+              <p class="text-xs text-slate-500 mt-1">
+                Start speaking to begin the conversation
+              </p>
+
+            </div>
+
+          </div>
+
+        } @else {
+
+          <div class="space-y-4">
+
+            @for (message of pipecat.messages(); track message.id) {
+
+              <div class="flex"
+                   [class.justify-end]="message.role === 'user'"
+                   [class.justify-start]="message.role === 'assistant'">
+
+                <div class="max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm"
+                     [class.bg-gradient-to-r]="message.role === 'user'"
+                     [class.from-violet-600]="message.role === 'user'"
+                     [class.to-indigo-600]="message.role === 'user'"
+                     [class.text-white]="message.role === 'user'"
+                     [class.bg-white/5]="message.role === 'assistant'"
+                     [class.border]="message.role === 'assistant'"
+                     [class.border-white/10]="message.role === 'assistant'">
+
+                  <div class="mb-1 text-xs font-semibold uppercase tracking-wide flex items-center gap-1.5"
+                       [class.text-violet-200]="message.role === 'user'"
+                       [class.text-slate-400]="message.role === 'assistant'">
+                    @if (message.role === 'user') {
+                      <i class="fas fa-user text-[10px]"></i>
+                      You
+                    } @else {
+                      <i class="fas fa-robot text-[10px]"></i>
+                      AI Assistant
+                    }
+                  </div>
+
+                  <p class="whitespace-pre-wrap break-words text-sm leading-7">
+                    {{ message.text }}
+                  </p>
+
+                </div>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </div>
+
+      <!-- transcript footer - fixed -->
+      <div class="shrink-0 border-t border-white/5 bg-slate-900/40 backdrop-blur-sm px-6 py-4 flex items-center gap-3">
+        <div class="flex-1 rounded-full bg-slate-800/50 border border-white/10 px-4 py-2.5 text-sm text-slate-400 flex items-center gap-2"
+             [class.border-emerald-400/30]="isConnected()">
+          <i class="fas fa-microphone text-violet-400/50 text-xs"
+             [class.text-emerald-400/70]="pipecat.isMicEnabled()"></i>
+          <span class="truncate">{{ pipecat.isMicEnabled() ? 'Voice input active ...' : 'Microphone muted' }}</span>
+          <span class="ml-auto flex items-center gap-1.5">
+            <span class="h-1.5 w-1.5 rounded-full"
+                  [class.bg-emerald-400]="isConnected()"
+                  [class.bg-slate-500]="!isConnected()"
+                  [class.animate-pulse]="isConnected()"></span>
+            <span class="text-[10px] text-slate-500">{{ isConnected() ? 'live' : 'offline' }}</span>
+          </span>
+        </div>
+        <button class="rounded-full bg-violet-600/80 p-2.5 px-4 text-sm font-medium hover:bg-violet-500 transition flex items-center gap-1.5 shadow-violet-900/20 disabled:opacity-50"
+                [disabled]="!isConnected()">
+          <i class="fas fa-paper-plane text-xs"></i>
+          <span class="hidden sm:inline">Send</span>
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

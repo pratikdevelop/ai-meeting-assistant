@@ -28,6 +28,12 @@ export const routes: Routes = [
       import('./features/meetings/meetings')
         .then((m) => m.Meetings),
   },
+  {
+  path: 'meetings/:id',
+  loadComponent: () =>
+    import('./features/meeting-details/meeting-details')
+      .then((m) => m.MeetingDetails),
+},
 
   {
     path: 'settings',
