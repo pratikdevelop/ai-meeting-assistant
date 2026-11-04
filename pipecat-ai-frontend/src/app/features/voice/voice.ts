@@ -8,16 +8,16 @@ import {
 
 import { Pipecat } from '../../core/pipecat';
 import { Session } from '../../core/state/session';
-import { Transcript } from '../transcript/transcript';
 
 @Component({
   selector: 'app-voice',
-  imports: [Transcript],
+  imports: [],
   templateUrl: './voice.html',
 })
 export class Voice implements OnDestroy {
   readonly pipecat = inject(Pipecat);
   readonly session = inject(Session);
+  private isStarting = false;
   
   // ✅ Signal for reactive current time
   currentTime = signal<string>(new Date().toLocaleTimeString([], { 
@@ -43,32 +43,46 @@ export class Voice implements OnDestroy {
     }
   }
 
-  async startConversation(): Promise<void> {
-    try {
-      const meeting = await this.session.startMeeting(
-        'AI Voice Meeting',
-      );
+async startConversation(): Promise<void> {
+  const state = this.pipecat.connectionState();
 
-      console.log('✅ Meeting created:', meeting);
-
-      await this.pipecat.connect();
-
-      console.log('✅ Pipecat connected');
-    } catch (error) {
-      console.error(
-        '❌ Failed to start conversation:',
-        error,
-      );
-
-      this.session.clearSession();
-
-      try {
-        await this.pipecat.disconnect();
-      } catch {
-        // Ignore disconnect errors during startup failure.
-      }
-    }
+  if (
+    this.isStarting ||
+    state === 'connecting' ||
+    state === 'connected' ||
+    state === 'ready' ||
+    state === 'disconnecting'
+  ) {
+    console.warn('Conversation is already starting or active.');
+    return;
   }
+
+  this.isStarting = true;
+
+  try {
+    const meeting = await this.session.startMeeting(
+      'AI Voice Meeting'
+    );
+
+    console.log('Meeting created:', meeting);
+
+    await this.pipecat.connect();
+
+    console.log('Pipecat connected');
+  } catch (error) {
+    console.error('Failed to start conversation:', error);
+
+    this.session.clearSession();
+
+    try {
+      await this.pipecat.disconnect();
+    } catch {
+      // Ignore disconnect errors during startup failure.
+    }
+  } finally {
+    this.isStarting = false;
+  }
+}
 
   async endConversation(): Promise<void> {
     try {

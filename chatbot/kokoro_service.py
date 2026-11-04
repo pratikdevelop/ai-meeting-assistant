@@ -1,11 +1,12 @@
+
 import asyncio
 from collections.abc import AsyncGenerator
 
 import numpy as np
-
 from kokoro import KPipeline
 
 from pipecat.frames.frames import Frame, TTSAudioRawFrame
+from pipecat.services.settings import TTSSettings
 from pipecat.services.tts_service import TTSService
 from pipecat.utils.tracing.service_decorators import traced_tts
 
@@ -18,6 +19,10 @@ class KokoroTTSService(TTSService):
     sent to a Pipecat transport such as SmallWebRTC.
     """
 
+    # Pipecat runtime settings
+    Settings = TTSSettings
+    _settings: Settings
+
     def __init__(
         self,
         voice: str = "af_heart",
@@ -25,10 +30,18 @@ class KokoroTTSService(TTSService):
         sample_rate: int = 24000,
         **kwargs,
     ):
+        # Initialize all TTS settings explicitly.
+        default_settings = self.Settings(
+            model=None,
+            voice=voice,
+            language=None,
+        )
+
         super().__init__(
             sample_rate=sample_rate,
             push_start_frame=True,
             push_stop_frames=True,
+            settings=default_settings,
             **kwargs,
         )
 
@@ -92,6 +105,11 @@ class KokoroTTSService(TTSService):
         text: str,
         context_id: str,
     ) -> AsyncGenerator[Frame, None]:
+
+        print(
+            f"🎙️ [Kokoro TTS] "
+            f"context={context_id} | text={text!r}"
+        )
 
         if not text or not text.strip():
             return
